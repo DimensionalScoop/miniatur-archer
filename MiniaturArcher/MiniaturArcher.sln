@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniaturArcher", "MiniaturArcher\MiniaturArcher\MiniaturArcher.csproj", "{27E0A982-B0C5-4298-B7EB-99840BC9D111}"
+EndProject
+Project("{96E2B04D-8817-42C6-938A-82C39BA4D311}") = "MiniaturArcherContent", "MiniaturArcher\MiniaturArcherContent\MiniaturArcherContent.contentproj", "{6AB5D68E-C3E3-41FB-975D-C5991F507FD0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "X45Game", "..\..\x45game\X45Game\X45Game.csproj", "{980D56E7-9844-48A8-B789-A1ABC25A1C13}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|Mixed Platforms = Release|Mixed Platforms
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{27E0A982-B0C5-4298-B7EB-99840BC9D111}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{27E0A982-B0C5-4298-B7EB-99840BC9D111}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{27E0A982-B0C5-4298-B7EB-99840BC9D111}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{27E0A982-B0C5-4298-B7EB-99840BC9D111}.Debug|x86.ActiveCfg = Debug|x86
+		{27E0A982-B0C5-4298-B7EB-99840BC9D111}.Debug|x86.Build.0 = Debug|x86
+		{27E0A982-B0C5-4298-B7EB-99840BC9D111}.Release|Any CPU.ActiveCfg = Release|x86
+		{27E0A982-B0C5-4298-B7EB-99840BC9D111}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{27E0A982-B0C5-4298-B7EB-99840BC9D111}.Release|Mixed Platforms.Build.0 = Release|x86
+		{27E0A982-B0C5-4298-B7EB-99840BC9D111}.Release|x86.ActiveCfg = Release|x86
+		{27E0A982-B0C5-4298-B7EB-99840BC9D111}.Release|x86.Build.0 = Release|x86
+		{6AB5D68E-C3E3-41FB-975D-C5991F507FD0}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{6AB5D68E-C3E3-41FB-975D-C5991F507FD0}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{6AB5D68E-C3E3-41FB-975D-C5991F507FD0}.Debug|x86.ActiveCfg = Debug|x86
+		{6AB5D68E-C3E3-41FB-975D-C5991F507FD0}.Release|Any CPU.ActiveCfg = Release|x86
+		{6AB5D68E-C3E3-41FB-975D-C5991F507FD0}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{6AB5D68E-C3E3-41FB-975D-C5991F507FD0}.Release|x86.ActiveCfg = Release|x86
+		{980D56E7-9844-48A8-B789-A1ABC25A1C13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{980D56E7-9844-48A8-B789-A1ABC25A1C13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{980D56E7-9844-48A8-B789-A1ABC25A1C13}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{980D56E7-9844-48A8-B789-A1ABC25A1C13}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{980D56E7-9844-48A8-B789-A1ABC25A1C13}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{980D56E7-9844-48A8-B789-A1ABC25A1C13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{980D56E7-9844-48A8-B789-A1ABC25A1C13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{980D56E7-9844-48A8-B789-A1ABC25A1C13}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{980D56E7-9844-48A8-B789-A1ABC25A1C13}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{980D56E7-9844-48A8-B789-A1ABC25A1C13}.Release|x86.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
