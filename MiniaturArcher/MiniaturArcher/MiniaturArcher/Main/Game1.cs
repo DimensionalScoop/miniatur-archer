@@ -36,9 +36,11 @@ namespace MiniaturArcher
             Components.Add(sync);
 
             Map.Sync = sync;
+            Map.Ui = ui;
             Tile.Map = map;
             UI.Map = map;
             UI.Input = _input;
+            UI.Sync = sync;
             Synchronizer.Ui = ui;
             Synchronizer.Map = map;
 

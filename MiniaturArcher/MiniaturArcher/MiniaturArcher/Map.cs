@@ -10,17 +10,19 @@ using X45Game.Drawing;
 using X45Game.Effect;
 using X45Game.Input;
 using X45Game.Extensions;
+using System.Diagnostics;
 
 namespace MiniaturArcher
 {
     class Map:DrawableGameComponent
     {
         public static Synchronizer Sync;
+        public static UI Ui;
 
-        const int mapSize=30;
+        const int mapSize=20;
         const int mapBias = mapSize / 2;
 
-        public static readonly TimeSpan TurnDuration=TimeSpan.FromSeconds(15);
+        public static readonly TimeSpan TurnDuration=TimeSpan.FromSeconds(5);
         public static readonly TimeSpan TurnBreakDuration=TimeSpan.FromSeconds(1);
 
         Tile[,] tiles = new Tile[mapSize, mapSize];
@@ -29,9 +31,11 @@ namespace MiniaturArcher
 
         Vector2 camera;
         SpriteBatch spriteBatch;
+        TimeSpan lastUpdate;
 
         public int Turn;
         public TimeSpan TurnBegin;
+        public bool TurnEnded;
 
         public Tile this[Point2 i]
         {
@@ -63,7 +67,9 @@ namespace MiniaturArcher
 
         public override void Update(GameTime gameTime)
         {
-            if (gameTime.TotalGameTime - TurnBegin >= TurnDuration)
+            lastUpdate = gameTime.TotalGameTime;
+
+            if (!TurnEnded && gameTime.TotalGameTime - TurnBegin >= TurnDuration)
                 TurnEnds();
             
             base.Update(gameTime);
@@ -71,6 +77,7 @@ namespace MiniaturArcher
 
         private void TurnEnds()
         {
+            TurnEnded = true;
             Sync.NewEvent(SyncEvents.TurnEnd);
             
             //TODO: stuff that happens when the turn ends
@@ -78,7 +85,12 @@ namespace MiniaturArcher
 
         public void TurnBegins()
         {
+            Debug.Assert(TurnEnded);
+            TurnEnded = false;
+            Turn++;
+            TurnBegin = lastUpdate;
 
+            Ui.NewChatMessage("~ Turn " + Turn + " ~");
         }
 
         public override void Draw(GameTime gameTime)
@@ -89,9 +101,7 @@ namespace MiniaturArcher
                 for (int y = 0; y < mapSize; y++)
                     tiles[x, y].Draw(spriteBatch, camera);
 
-            spriteBatch.DrawRectangle(new Vector2(28, 28), 49, 8, Sync.OwnFraction.Color);
-            spriteBatch.DrawProgressBar(new Vector2(30, 30), 45, (int)(45 * (gameTime.TotalGameTime - TurnBegin).TotalSeconds / TurnDuration.TotalSeconds), 4, Color.Gray, Color.GhostWhite);
-
+            
             spriteBatch.End();
             
             base.Draw(gameTime);

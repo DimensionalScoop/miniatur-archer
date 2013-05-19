@@ -13,24 +13,34 @@ using X45Game.Extensions;
 
 namespace MiniaturArcher
 {
+    class ChatItem { public string Message; public TimeSpan SpawnTime;}
+
     class UI:DrawableGameComponent
     {
-        public List<string> Chat = new List<string>();
+        static readonly TimeSpan chatDisplayDuration = TimeSpan.FromSeconds(5);
 
+        List<ChatItem> chat = new List<ChatItem>();
+
+        TimeSpan lastUpdate;
         Font font = new Font("font");
         SpriteBatch spriteBatch;
+        Vector2 screen { get { return new Vector2(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height); } }
         public static Map Map;
         public static InputProvider Input;
         public static Synchronizer Sync;
         public static KeyProvider Key { get { return Input.Key; } }
         public static MouseProvider Mouse { get { return Input.Mouse; } }
 
+
         bool writingChatLine;
         private string chatLine = "";
 
 
 
-        public UI(Game game) : base(game) { }
+        public UI(Game game) : base(game) 
+        {
+            DrawOrder = 10;
+        }
 
         protected override void LoadContent()
         {
@@ -47,15 +57,25 @@ namespace MiniaturArcher
                 chatLine += arg1;
         }
 
+        public void NewChatMessage(string msg, bool local = true)
+        {
+            chat.Add(new ChatItem() { Message = msg, SpawnTime = lastUpdate });
+            if (!local) Sync.NewEvent(SyncEvents.Chat, msg);
+        }
+
         public override void Update(GameTime gameTime)
         {
+            lastUpdate = gameTime.TotalGameTime;
+
             if (writingChatLine && Key.KeysStroked.Contains(Keys.Enter))
             {
-                Sync.NewEvent(SyncEvents.Chat, chatLine);
+                NewChatMessage(chatLine, false);
                 chatLine = "";
                 writingChatLine = false;
             }
             else if (Key.KeysStroked.Contains(Keys.Enter)) writingChatLine = true;
+
+            chat.RemoveAll(p => lastUpdate - p.SpawnTime > chatDisplayDuration);
             
             base.Update(gameTime);
         }
@@ -64,8 +84,12 @@ namespace MiniaturArcher
         {
             spriteBatch.Begin();
 
-            for (int i = 0; i < 10 && i < Chat.Count; i++)
-                spriteBatch.DrawText(Chat[Chat.Count - i - 1], new Vector2(20, 300 - font.SpriteFont.LineSpacing * i), false, font, Color.Black);
+            for (int i = 0; i < 10 && i < chat.Count; i++)
+                spriteBatch.DrawText(chat[chat.Count - i - 1].Message, new Vector2(screen.X/2,screen.Y*2/3f)+new Vector2(0, font.SpriteFont.LineSpacing * i), true, font, Color.Black);
+
+            spriteBatch.DrawRectangle(new Vector2(20, 20), 100, 40, Sync.OwnFraction.Color);
+            spriteBatch.DrawProgressBar(new Vector2(30, 30), 45, (int)MathHelper.Clamp((int)(45 * (gameTime.TotalGameTime - Map.TurnBegin).TotalSeconds / Map.TurnDuration.TotalSeconds), 0, 45), 4, Color.LightGray, Color.DarkGray, false);
+            spriteBatch.DrawText(Map.Turn.ToString(), new Vector2(30 + 50, 30 - 5), false, font, Color.Black);
 
             spriteBatch.End();
 
