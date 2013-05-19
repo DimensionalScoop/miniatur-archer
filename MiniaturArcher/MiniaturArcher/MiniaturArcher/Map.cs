@@ -89,7 +89,8 @@ namespace MiniaturArcher
                 for (int y = 0; y < mapSize; y++)
                     tiles[x, y].Draw(spriteBatch, camera);
 
-            spriteBatch.DrawProgressBar(new Vector2(20, 20), 45, (int)(45 * (gameTime.TotalGameTime - TurnBegin).TotalSeconds / TurnDuration.TotalSeconds), 4, Color.Gray, Color.GhostWhite);
+            spriteBatch.DrawRectangle(new Vector2(28, 28), 49, 8, Sync.OwnFraction.Color);
+            spriteBatch.DrawProgressBar(new Vector2(30, 30), 45, (int)(45 * (gameTime.TotalGameTime - TurnBegin).TotalSeconds / TurnDuration.TotalSeconds), 4, Color.Gray, Color.GhostWhite);
 
             spriteBatch.End();
             

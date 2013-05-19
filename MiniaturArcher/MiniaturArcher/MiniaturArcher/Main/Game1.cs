@@ -16,7 +16,9 @@ namespace MiniaturArcher
         SpriteBatch _spriteBatch;
 
         InputProvider _input;
-
+        UI ui;
+        Synchronizer sync;
+        Map map;
 
         public Game1()
         {
@@ -24,10 +26,33 @@ namespace MiniaturArcher
             Content.RootDirectory = "Content";
             _input = new InputProvider(this);
 
+            ui = new UI(this);
+            Components.Add(ui);
+
+            map = new Map(this);
+            Components.Add(map);
+
+            sync = new Synchronizer(this);
+            Components.Add(sync);
+
+            Map.Sync = sync;
+            Tile.Map = map;
+            UI.Map = map;
+            UI.Input = _input;
+            Synchronizer.Ui = ui;
+            Synchronizer.Map = map;
+
             _graphics.PreferredBackBufferWidth = 1360;
             _graphics.PreferredBackBufferHeight = 730;
             IsMouseVisible = true;
             TargetElapsedTime = TimeSpan.FromMilliseconds(30);
+        }
+
+        protected override void UnloadContent()
+        {
+            sync.Dispose();
+            
+            base.UnloadContent();
         }
 
         protected override void LoadContent()

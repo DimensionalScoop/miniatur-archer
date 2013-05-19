@@ -371,7 +371,7 @@ namespace MiniaturArcher
 
             for (int i = 0; i < 2; i++)
             {
-                if (Unit == null) continue;
+                if (Unit[i] == null) continue;
                 spriteBatch.Draw(Sprite, Position * tile.TextureOrigin * 2 + camera, Fraction.Color);
                 if (i == 0)
                     spriteBatch.DrawLine(Position * tile.TextureOrigin * 2 + camera + new Vector2(1, 3), (new Vector2(0, 15) * Unit[i].Hitpoints / (float)MiniaturArcher.Unit.MaxHitpoints + Position * tile.TextureOrigin * 2 + camera + new Vector2(2, 4)), Unit[i].Color);
