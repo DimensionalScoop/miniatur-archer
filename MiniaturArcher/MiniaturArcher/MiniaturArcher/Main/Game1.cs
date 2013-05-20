@@ -43,6 +43,10 @@ namespace MiniaturArcher
             UI.Sync = sync;
             Synchronizer.Ui = ui;
             Synchronizer.Map = map;
+            Card.Sync = sync;
+            Card.Map = map;
+            Unit.Map = map;
+            Unit.Sync = sync;
 
             _graphics.PreferredBackBufferWidth = 1360;
             _graphics.PreferredBackBufferHeight = 730;

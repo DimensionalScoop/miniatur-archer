@@ -41,12 +41,19 @@ namespace MiniaturArcher
         {
             get
             {
-                if (i.X + mapBias >= mapSize - mapBias || i.X + mapBias < 0 || i.Y + mapBias >= mapSize - mapBias || i.Y + mapBias < 0)
+                if(i.X + mapBias >= mapBias || i.X + mapBias < 0 || i.Y + mapBias >= mapBias || i.Y + mapBias < 0)
                     return null;
+                else
                 return tiles[i.X + mapBias, i.Y + mapBias];
             }
         }
-
+        public Tile this[Vector2 i]
+        {
+            get
+            {
+                return this[new Point2((int)i.X / Tile.tile.Texture.Width - mapBias, (int)i.Y / Tile.tile.Texture.Height - mapBias)];
+            }
+        }
 
         public Map(Game game):base(game)
         {
@@ -89,6 +96,8 @@ namespace MiniaturArcher
             TurnEnded = false;
             Turn++;
             TurnBegin = lastUpdate;
+            if(Turn%2==0)
+            Sync.OwnFraction.DrawCards(1);
 
             Ui.NewChatMessage("~ Turn " + Turn + " ~");
         }

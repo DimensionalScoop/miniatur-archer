@@ -44,7 +44,7 @@ namespace MiniaturArcher
             }
         }
 
-        const int port = 29735;
+        const int port = 6669;
         const int timeout = 5000;
 
         public Synchronizer(Game game)

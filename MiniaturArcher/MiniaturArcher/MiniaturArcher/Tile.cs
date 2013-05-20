@@ -88,15 +88,15 @@ namespace MiniaturArcher
 
         //public Unit(Synchronizer.Unit template):this(
 
-        private Unit(Point2 position, UnitTypes type, Player fraction, long id)
+        public Unit(Point2 position, UnitTypes type, Player fraction) : this(position, type, fraction, Sync.GetId()) { }
+
+        public Unit(Point2 position, UnitTypes type, Player fraction, long id)
         {
             Type = type;
             Position = position;
             Fraction = fraction;
             Id = id;
-
-            Debug.Assert(Tile.CountUnits < 2);
-            Spawn(Tile);
+            Hitpoints = MaxHitpoints;
         }
 
         public void Attack()
@@ -142,7 +142,7 @@ namespace MiniaturArcher
             {
                 if (target.CountUnits == 0)
                 {
-                    if (Fraction.IsEnemy(target.Fraction)) target.Activity = -target.Activity;
+                    if (target.Fraction==null || Fraction.IsEnemy(target.Fraction)) target.Activity = -target.Activity;
                     target.Fraction = Fraction;
                 }
                 else if (Fraction.IsAlley(target.GetUnitWithMostHitpoints.Fraction)) { }
@@ -302,7 +302,8 @@ namespace MiniaturArcher
     {
         public static Map Map;
 
-        static Sprite tile = new Sprite("s\\tile"),
+        public static readonly Sprite tile = new Sprite("s\\tile"),
+            tileBg=new Sprite("s\\tilebg"),tileBg2=new Sprite("s\\tilebg2"),
             fire = new Sprite("s\\fire"), water = new Sprite("s\\water"), air = new Sprite("s\\air"),
             firefire=new Sprite("s\\firefire"),waterwater=new Sprite("s\\waterwater"),airair=new Sprite("s\\airair"),
             fireair = new Sprite("s\\fireair"), firewater = new Sprite("s\\firewater"), waterair = new Sprite("s\\waterair");
@@ -310,6 +311,7 @@ namespace MiniaturArcher
         const int defaultActivity = -10;
         const int activityReductionPerTurn = 1;
         const int maxActivity = 50;
+        public const int ActivityPerSummoning = 10;
         
         public Unit[] Unit;
         
@@ -353,6 +355,12 @@ namespace MiniaturArcher
             Activity = defaultActivity;
         }
 
+        internal void Summon(Unit unit)
+        {
+            Debug.Assert(CountUnits < 2);
+            unit.Spawn(this);
+        }
+
         internal void Release(Unit unit)
         {
             //XXX: May lead to glitches if unit[0]==unit[1]
@@ -364,22 +372,23 @@ namespace MiniaturArcher
         public void Draw(SpriteBatch spriteBatch, Vector2 camera)
         {
             Color color = Color.LightGray;
-            if (Activity < 0) color = Color.Lerp(Color.White, Color.Gray, Activity / (float)maxActivity);
-            else color = Color.Lerp(Color.White, Fraction.Color, Activity / (float)maxActivity);
+            if (Activity < 0) color = Color.Lerp(Color.White, Color.Gray, -Activity / (float)maxActivity);
+            else color = Color.Lerp(Color.White, Color.Orange, Activity / (float)maxActivity);
 
-            spriteBatch.Draw(tile, Position * tile.TextureOrigin * 2 + camera, color);
+            spriteBatch.Draw(tileBg2, Position * tile.TextureOrigin * 2 + camera, color);
+            //spriteBatch.Draw(tileBg, Position * tile.TextureOrigin * 2 + camera, Fraction == null ? Color.White : Fraction.Color);
+            spriteBatch.Draw(tile, Position * tile.TextureOrigin * 2 + camera, Fraction == null ? Color.White : Fraction.Color);
 
             for (int i = 0; i < 2; i++)
             {
                 if (Unit[i] == null) continue;
-                spriteBatch.Draw(Sprite, Position * tile.TextureOrigin * 2 + camera, Fraction.Color);
+                spriteBatch.Draw(Sprite, Position * tile.TextureOrigin * 2 + camera, Color.White);
                 if (i == 0)
                     spriteBatch.DrawLine(Position * tile.TextureOrigin * 2 + camera + new Vector2(1, 3), (new Vector2(0, 15) * Unit[i].Hitpoints / (float)MiniaturArcher.Unit.MaxHitpoints + Position * tile.TextureOrigin * 2 + camera + new Vector2(2, 4)), Unit[i].Color);
                 else
                     spriteBatch.DrawLine(Position * tile.TextureOrigin * 2 + camera + new Vector2(3, 1), (new Vector2(15, 0) * Unit[i].Hitpoints / (float)MiniaturArcher.Unit.MaxHitpoints + Position * tile.TextureOrigin * 2 + camera + new Vector2(3, 1)), Unit[i].Color);
             }
         }
-
         Sprite Sprite
         {
             get
