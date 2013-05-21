@@ -20,7 +20,6 @@ namespace MiniaturArcher
         public static UI Ui;
 
         const int mapSize=20;
-        const int mapBias = mapSize / 2;
 
         public static readonly TimeSpan TurnDuration=TimeSpan.FromSeconds(5);
         public static readonly TimeSpan TurnBreakDuration=TimeSpan.FromSeconds(1);
@@ -41,17 +40,17 @@ namespace MiniaturArcher
         {
             get
             {
-                if(i.X + mapBias >= mapBias || i.X + mapBias < 0 || i.Y + mapBias >= mapBias || i.Y + mapBias < 0)
+                if (i.X >= mapSize || i.X < 0 || i.Y >= mapSize || i.Y < 0)
                     return null;
                 else
-                return tiles[i.X + mapBias, i.Y + mapBias];
+                    return tiles[i.X, i.Y];
             }
         }
         public Tile this[Vector2 i]
         {
             get
             {
-                return this[new Point2((int)i.X / Tile.tile.Texture.Width - mapBias, (int)i.Y / Tile.tile.Texture.Height - mapBias)];
+                return this[new Point2((int)i.X / Tile.tile.Texture.Width, (int)i.Y / Tile.tile.Texture.Height)];
             }
         }
 

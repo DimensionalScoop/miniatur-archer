@@ -143,8 +143,8 @@ namespace MiniaturArcher
             var size = (int)Card.TurnedCard.TextureOrigin.X * 2;
 
             //spriteBatch.DrawRectangle(grp-new Vector2(100,30), 100, 40, Sync.OwnFraction.Color);
-            spriteBatch.DrawProgressBar(grp + new Vector2(0, 65), size, (int)MathHelper.Clamp((int)(size * (gameTime.TotalGameTime - Map.TurnBegin).TotalSeconds / Map.TurnDuration.TotalSeconds), 0, size), 4, Color.DarkGray, Sync.OwnFraction.Color, true);
-            spriteBatch.DrawText(Map.Turn.ToString(), grp + new Vector2(0, 55),true, font, Color.White);
+            spriteBatch.DrawProgressBar(grp + new Vector2(0, 62+font.SpriteFont.LineSpacing/2), size, (int)MathHelper.Clamp((int)(size * (gameTime.TotalGameTime - Map.TurnBegin).TotalSeconds / Map.TurnDuration.TotalSeconds), 0, size), 4, Color.DarkGray, Sync.OwnFraction.Color, true);
+            spriteBatch.DrawText(Map.Turn.ToString(), grp + new Vector2(0, 60),true, font, Color.White);
 
             for (int i = 0; i < Sync.OwnFraction.Deck.Count; i++)
             {
@@ -163,13 +163,31 @@ namespace MiniaturArcher
                     for (int i2 = count - 1; i2 >= 0; i2--)
                         Card.AllCards[i].Draw(spriteBatch, hand.Round() + new Vector2(0, i2*2), false, false,i2);
  
-                    spriteBatch.DrawText("x" + count, hand + Card.TurnedCard.TextureOrigin-new Vector2(10,10), true, font, Card.AllCards[i].Color.Inverse());
+                    var counterColor=Color.Lerp(Card.AllCards[i].Color.Inverse(),Color.Black,0.4f);
+                    spriteBatch.DrawText(count.ToString(), hand, true, font,counterColor );
                     hand -= new Vector2(Card.TurnedCard.TextureOrigin.X * 2.3f, 0);
                 }
             }
 
             if (selectedCard != null)
                 spriteBatch.DrawLine(startDragPosition, Mouse.Position, selectedCard.Color);
+
+            if(Key.KeysPressed.Contains(Keys.Tab))
+            {
+                var pos=screen/2-new Vector2(0,screen.Y/3);
+                var offset=new Vector2(0,font.SpriteFont.LineSpacing);
+
+                spriteBatch.DrawBox(pos-new Vector2(200,20), 400,(int)( (3 + Sync.PlayersByConnection.Count) * offset.Y),Color.White,Color.Black);
+                spriteBatch.DrawText("Connected Players:",pos,true,font,Color.Black);pos+=offset*1.5f;
+                spriteBatch.DrawText(Sync.OwnFraction.Name+" (you)", pos, true, font, Sync.OwnFraction.Color); pos += offset;
+                foreach (var players in Sync.PlayersByConnection)
+                {
+                    var ping = (int)(players.Key.AverageRoundtripTime*1000);
+                    var timeOffset=(int)players.Key.RemoteTimeOffset*1000;
+                    var status=players.Key.Status;
+                    spriteBatch.DrawText(ping+" "+players.Value.Name+" ("+status+")", pos, true, font, players.Value.Color); pos += offset;
+                }
+            }
 
             spriteBatch.End();
 

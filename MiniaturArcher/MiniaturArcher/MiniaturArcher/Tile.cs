@@ -355,10 +355,13 @@ namespace MiniaturArcher
             Activity = defaultActivity;
         }
 
-        internal void Summon(Unit unit)
+        internal void Summon(Unit unit,bool local=false)
         {
             Debug.Assert(CountUnits < 2);
             unit.Spawn(this);
+            Activity -= Tile.ActivityPerSummoning;
+            if(!local)
+            Map.Sync.NewEvent(SyncEvents.UnitSummoned, (byte)Type,unit.Id ,Position);
         }
 
         internal void Release(Unit unit)
@@ -376,7 +379,7 @@ namespace MiniaturArcher
             else color = Color.Lerp(Color.White, Color.Orange, Activity / (float)maxActivity);
 
             spriteBatch.Draw(tileBg2, Position * tile.TextureOrigin * 2 + camera, color);
-            //spriteBatch.Draw(tileBg, Position * tile.TextureOrigin * 2 + camera, Fraction == null ? Color.White : Fraction.Color);
+            spriteBatch.Draw(tileBg, Position * tile.TextureOrigin * 2 + camera, Fraction == null ? Color.White : Fraction.Color);
             spriteBatch.Draw(tile, Position * tile.TextureOrigin * 2 + camera, Fraction == null ? Color.White : Fraction.Color);
 
             for (int i = 0; i < 2; i++)

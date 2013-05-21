@@ -27,7 +27,12 @@ namespace MiniaturArcher
             return Hand.Count(p => p == type);
         }
 
-        public Player(Players id, int[] deck=null):base(id)
+        public readonly string Name;
+
+        //public static Player[] AllPlayers = new Player[7];
+
+
+        public Player(Players id, string name, int[] deck=null):base(id)
         {
             Hand = new List<Card>();
             Graveyard = new List<Card>();
@@ -51,6 +56,8 @@ namespace MiniaturArcher
 
             CreateDeck(deck);
             DrawCards(8);
+            Name = name;
+            //AllPlayers[(byte)id] = this;
         }
 
         void CreateDeck(int[] deck)

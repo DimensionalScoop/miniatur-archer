@@ -20,15 +20,15 @@ using System.Threading;
 
 namespace MiniaturArcher
 {
-    enum SyncEvents:byte { TurnEnd,TurnBegin, UnitMoved, UnitCreated, Chat, GameStart }
+    enum SyncEvents:byte { TurnEnd,TurnBegin, UnitMoved, UnitSummoned, Chat, GameStart, ConnectionId }
 
     class Synchronizer:GameComponent
     {
         public static Map Map;
         public static UI Ui;
 
-        int countTotalPlayers { get { return net.CountConnections+1; } }
-        int countOtherPlayers { get { return net.CountConnections; } }
+        public int CountTotalPlayers { get { return net.CountConnections+1; } }
+        public int CountOtherPlayers { get { return net.CountConnections; } }
         int countTurnEnds;
 
         NetworkManager net;
@@ -43,6 +43,8 @@ namespace MiniaturArcher
                 return int.MaxValue * (byte)OwnFraction.Id;
             }
         }
+
+        public Dictionary<NetConnection, Player> PlayersByConnection = new Dictionary<NetConnection, Player>();
 
         const int port = 6669;
         const int timeout = 5000;
@@ -65,12 +67,11 @@ namespace MiniaturArcher
         }
 
         private void InitializeConnection()
-        {
+        {  
             string password = "";
 #if !DEBUG
             Console.Write("Set password for network game: ");
 
-            countPlayer = 1;
             password=Console.ReadLine();
 
             while (userName == "")
@@ -78,6 +79,8 @@ namespace MiniaturArcher
                 Console.Write("Username: ");
                 userName = Console.ReadLine();
             }
+#else
+            userName = "DEBUG";
 #endif
             net = new NetworkManager("Miniatur-Archer", port, password);
 
@@ -136,19 +139,30 @@ namespace MiniaturArcher
                 Console.Write("\rConnected clients: " + net.CountConnections + "        ");
             }
 
-            OwnFraction = new Player(Player.playersEnumCount[0]);
-            for (int i = 0; i < countOtherPlayers; i++)
+            OwnFraction = new Player(Player.playersEnumCount[0],userName);
+            for (int i = 0; i < CountOtherPlayers; i++)
                 NewEvent(SyncEvents.GameStart, (byte)Player.playersEnumCount[i + 1],i);
+            NewEvent(SyncEvents.ConnectionId, (byte)OwnFraction.Id, userName);
         }
 
+        internal void NewEvent<T1, T2, T3, T4>(SyncEvents syncEvent, T1 param1, T2 param2, T3 param3,T4 param4, int? sentTo = null)
+        {
+            var msg = PrepareMessage(syncEvent, sentTo);
 
+            msg.OutgoingMessage.WriteT(param1);
+            msg.OutgoingMessage.WriteT(param2);
+            msg.OutgoingMessage.WriteT(param3);
+            msg.OutgoingMessage.WriteT(param4);
+
+            net.Send(msg);
+        }
         internal void NewEvent<T1, T2, T3>(SyncEvents syncEvent, T1 param1, T2 param2, T3 param3, int? sentTo = null)
         {
             var msg = PrepareMessage(syncEvent, sentTo);
 
-            msg.OutgoingMessage.Write(RawSerializer.RawSerialize(param1));
-            msg.OutgoingMessage.Write(RawSerializer.RawSerialize(param2));
-            msg.OutgoingMessage.Write(RawSerializer.RawSerialize(param3));
+            msg.OutgoingMessage.WriteT(param1);
+            msg.OutgoingMessage.WriteT(param2);
+            msg.OutgoingMessage.WriteT(param3);
 
             net.Send(msg);
         }
@@ -156,8 +170,8 @@ namespace MiniaturArcher
         {
             var msg = PrepareMessage(syncEvent, sentTo);
 
-            msg.OutgoingMessage.Write(RawSerializer.RawSerialize(param1));
-            msg.OutgoingMessage.Write(RawSerializer.RawSerialize(param2));
+            msg.OutgoingMessage.WriteT(param1);
+            msg.OutgoingMessage.WriteT(param2);
 
             net.Send(msg);
         }
@@ -165,7 +179,7 @@ namespace MiniaturArcher
         {
             var msg = PrepareMessage(syncEvent, sentTo);
 
-            msg.OutgoingMessage.Write(RawSerializer.RawSerialize(param1));
+            msg.OutgoingMessage.WriteT(param1);
 
             net.Send(msg);
         }
@@ -207,7 +221,7 @@ namespace MiniaturArcher
 
         private void UpdateTurns(GameTime gameTime)
         {
-            if (countTurnEnds == countTotalPlayers)
+            if (countTurnEnds == CountTotalPlayers)
             {
                 countTurnEnds = 0;
                 Map.TurnBegins();
@@ -232,27 +246,58 @@ namespace MiniaturArcher
             {
                 case SyncEvents.TurnEnd:
                     countTurnEnds++;
-                    break;
+                    return;
+
+                case SyncEvents.UnitSummoned:
+                    EventUnitSummoned(msg);
+                    return;
 
                 case SyncEvents.UnitMoved:
-                    long id = -1; msg.ReadAllFields(id);
-                    Point2 target = Point2.Zero; msg.ReadAllFields(target);
+                    //long id = -1; msg.ReadAllFields(id);
+                    //Point2 target = Point2.Zero; msg.ReadAllFields(target);
 
-                    var unit = Map.Units.Find(p => p.Id == id);
-                    unit.Move(Map[target]);
-                    break;
+                    //var unit = Map.Units.Find(p => p.Id == id);
+                    //unit.Move(Map[target]);
+                    return;
 
                 case SyncEvents.Chat:
-                    Ui.NewChatMessage(msg.ReadString());                
-                    break;
+                    Ui.NewChatMessage(msg.ReadString());
+                    return;
 
                 case SyncEvents.GameStart:
-                    Debug.Assert(OwnFraction == null);
-                    OwnFraction = new Player((Players)msg.ReadByte());
-                    break;
+                    EventGameStart(msg);
+                    return;
+
+                case SyncEvents.ConnectionId:
+                    EventConnectionId(msg);
+                    return;
 
                 default: throw new NotImplementedException();
             }
+        }
+
+        private void EventConnectionId(NetIncomingMessage msg)
+        {
+            Players id = (Players)msg.ReadByte();
+            string name = msg.ReadString();//RawSerializer.RawDeserialize<string>(msg.Data, msg.PositionInBytes);
+            Debug.Assert(!PlayersByConnection.ContainsKey(msg.SenderConnection));
+            PlayersByConnection.Add(msg.SenderConnection, new Player(id, name));
+        }
+
+        private void EventGameStart(NetIncomingMessage msg)
+        {
+            Debug.Assert(OwnFraction == null);
+            OwnFraction = new Player((Players)msg.ReadByte(),userName);
+            NewEvent(SyncEvents.ConnectionId, (byte)OwnFraction.Id, userName);
+        }
+
+        private void EventUnitSummoned(NetIncomingMessage msg)
+        {
+            UnitTypes type = (UnitTypes)msg.ReadByte();
+            Player fraction = Map.Sync.PlayersByConnection[msg.SenderConnection];
+            long id = msg.ReadT<long>();
+            Point2 pos = msg.ReadT<Point2>();
+            Map[pos].Summon(new Unit(pos, type, fraction, id),true);
         }
     }
 }

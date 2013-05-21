@@ -56,7 +56,6 @@ namespace MiniaturArcher
                         //TODO: ACTIVITY
                     //    if (tile.Activity >= Tile.ActivityPerSummoning)
                         {
-                            tile.Activity -= Tile.ActivityPerSummoning;
                             tile.Summon(new Unit(tile.Position, Type, Sync.OwnFraction));
                             return true;
                         }
