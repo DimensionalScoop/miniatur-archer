@@ -13,7 +13,6 @@ using X45Game.Extensions;
 using System.Diagnostics;
 using Lidgren.Network;
 using X45Game.Network;
-using ProtoBuf;
 using System.IO;
 using X45Game.Strategics;
 using System.Threading;
@@ -53,7 +52,7 @@ namespace MiniaturArcher
             : base(game)
         {
             Console.WriteLine("------------------------------");
-            Console.WriteLine("Miniatur(e)-Hunter");
+            Console.WriteLine("Miniatur(e)-Archer");
             Console.WriteLine("(c) by Max Pernklau");
             Console.WriteLine("------------------------------\n");
 

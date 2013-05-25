@@ -26,7 +26,7 @@ namespace MiniaturArcher
 
         Tile[,] tiles = new Tile[mapSize, mapSize];
 
-        public List<Unit> Units = new List<Unit>();
+        //public List<Unit> Units = new List<Unit>();
 
         Vector2 camera;
         SpriteBatch spriteBatch;
@@ -87,6 +87,22 @@ namespace MiniaturArcher
             Sync.NewEvent(SyncEvents.TurnEnd);
             
             //TODO: stuff that happens when the turn ends
+            List<Unit> units=new List<Unit>();
+
+            for (int x = 0; x < mapSize; x++)
+                for (int y = 0; y < mapSize; y++)
+                {
+                    var tile = tiles[x, y];
+                    if (tile.CountUnits > 0)
+                        units.AddRange(tile.Unit);
+                }
+            units.RemoveAll(p => p == null);
+
+            units.ForEach(p => p.Idle());
+
+            for (int x = 0; x < mapSize; x++)
+                for (int y = 0; y < mapSize; y++)
+                    tiles[x, y].TurnEnds();
         }
 
         public void TurnBegins()
@@ -98,7 +114,6 @@ namespace MiniaturArcher
             if(Turn%2==0)
             Sync.OwnFraction.DrawCards(1);
 
-            Ui.NewChatMessage("~ Turn " + Turn + " ~");
         }
 
         public override void Draw(GameTime gameTime)

@@ -24,6 +24,9 @@ namespace MiniaturArcher
         Card selectedCard;
         Vector2 startDragPosition;
 
+        public Unit SelectedUnit;
+        Unit beginUnitMoveUnit;
+
         public Vector2 Camera;
 
         TimeSpan lastUpdate;
@@ -83,22 +86,8 @@ namespace MiniaturArcher
             chat.RemoveAll(p => lastUpdate - p.SpawnTime > chatDisplayDuration);
 
 
-            if (Mouse.StartDrags.Contains(MouseButtons.Left))
-            {
-                if (selectedCard == null)
-                {
-                    selectedCard = GetCardUnderMouse(out startDragPosition);
-                }
-            }
-            if (selectedCard != null&&Mouse.Clicks.Contains(MouseButtons.Left))
-            {
-                if (selectedCard != GetCardUnderMouse(out startDragPosition))
-                {
-                    if (selectedCard.ActivateCard(Mouse.Position - Camera))
-                        Sync.OwnFraction.Discard(selectedCard);
-                }
-                selectedCard = null;
-            }
+            MouseLeft();
+            MouseOver();
 
             if (Sync.OwnFraction.Hand.Count > 0 && Key.KeysStroked.Contains(Keys.D))
             {
@@ -107,6 +96,57 @@ namespace MiniaturArcher
             }
 
             base.Update(gameTime);
+        }
+
+        private void MouseOver()
+        {
+            var tile = Map[Mouse.Position-Camera];
+
+            if (tile != null && tile.CountUnits > 0)
+            {
+                if (tile.CountUnits == 1) 
+                    SelectedUnit = tile.GetUnitWithMostHitpoints;
+                else if (Mouse.Position.Y %( Tile.tile.TextureOrigin.Y *2) > Tile.tile.TextureOrigin.Y)
+                    SelectedUnit = tile.Unit[1];
+                else
+                    SelectedUnit = tile.Unit[0];
+            }
+            else
+                SelectedUnit = null;
+        }
+
+        private void MouseLeft()
+        {
+            if (Mouse.StartDrags.Contains(MouseButtons.Left))
+            {
+                if (selectedCard == null)
+                {
+                    selectedCard = GetCardUnderMouse(out startDragPosition);
+                }
+                if (selectedCard == null && SelectedUnit != null && SelectedUnit.Fraction == Sync.OwnFraction)
+                    beginUnitMoveUnit = SelectedUnit;
+            }
+
+
+            if (Mouse.Clicks.Contains(MouseButtons.Left))
+            {
+                if (selectedCard != null)
+                {
+                    if (selectedCard != GetCardUnderMouse(out startDragPosition))
+                    {
+                        if (selectedCard.ActivateCard(Mouse.Position - Camera))
+                            Sync.OwnFraction.Discard(selectedCard);
+                    }
+                    selectedCard = null;
+                }
+                else if (beginUnitMoveUnit!=null)
+                {
+
+
+                    beginUnitMoveUnit = null;
+                }
+            }
+
         }
         Card GetCardUnderMouse(out Vector2 cardPos)
         {

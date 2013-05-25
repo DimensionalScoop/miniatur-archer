@@ -67,7 +67,7 @@ namespace MiniaturArcher
                 {
                     case UnitTypes.Fire: return Color.OrangeRed;
                     case UnitTypes.Water: return Color.DarkBlue;
-                    case UnitTypes.Air: return Color.GreenYellow;
+                    case UnitTypes.Air: return Color.Green;
                     case UnitTypes.FireAir: return Color.Yellow;
                     case UnitTypes.FireWater: return new Color(170, 0, 255, 255);
                     case UnitTypes.WaterAir: return new Color(0, 255, 180, 255);
@@ -164,8 +164,14 @@ namespace MiniaturArcher
                 for (int y = -1; y <= 1; y++)
                 {
                     var neighbor = Map[Position + new Point2(x, y)];
-                    if (neighbor != null && Fraction.IsAlley(neighbor.Fraction))
+                    if (neighbor != null)
+                    {
+                        if (neighbor.Fraction == null)
+                            neighbor.Fraction = Fraction;
+                        else if (Fraction.IsEnemy(neighbor.Fraction))
+                            continue;
                         Map[Position + new Point2(x, y)].Activity += activityPerTurnNeighborTile;
+                    }
                 }
         }
 
@@ -302,11 +308,13 @@ namespace MiniaturArcher
     {
         public static Map Map;
 
-        public static readonly Sprite tile = new Sprite("s\\tile"),
-            tileBg=new Sprite("s\\tilebg"),tileBg2=new Sprite("s\\tilebg2"),
-            fire = new Sprite("s\\fire"), water = new Sprite("s\\water"), air = new Sprite("s\\air"),
-            firefire=new Sprite("s\\firefire"),waterwater=new Sprite("s\\waterwater"),airair=new Sprite("s\\airair"),
-            fireair = new Sprite("s\\fireair"), firewater = new Sprite("s\\firewater"), waterair = new Sprite("s\\waterair");
+        public static readonly Sprite tile = new Sprite("s\\tileframe"),
+            tileOverlay = new Sprite("s\\tileframe-overlay"),
+            tileBg = new Sprite("s\\tilebg1"), tileBg2 = new Sprite("s\\tilebg2"),
+            token = new Sprite("s\\token");
+            //fire = new Sprite("s\\fire"), water = new Sprite("s\\water"), air = new Sprite("s\\air"),
+            //firefire=new Sprite("s\\firefire"),waterwater=new Sprite("s\\waterwater"),airair=new Sprite("s\\airair"),
+            //fireair = new Sprite("s\\fireair"), firewater = new Sprite("s\\firewater"), waterair = new Sprite("s\\waterair");
 
         const int defaultActivity = -10;
         const int activityReductionPerTurn = 1;
@@ -326,6 +334,22 @@ namespace MiniaturArcher
                 if (Unit[0] == null) return Unit[1].Type;
                 if (Unit[1] == null) return Unit[0].Type;
                 return Unit[0].Type | Unit[1].Type;
+            }
+        }
+        public Color Color
+        {
+            get
+            {
+                switch (Type)
+                {
+                    case UnitTypes.Fire: return Color.OrangeRed;
+                    case UnitTypes.Water: return Color.DarkBlue;
+                    case UnitTypes.Air: return Color.Green;
+                    case UnitTypes.FireAir: return Color.Yellow;
+                    case UnitTypes.FireWater: return new Color(170, 0, 255, 255);
+                    case UnitTypes.WaterAir: return new Color(0, 255, 180, 255);
+                    default: throw new NotImplementedException();
+                }
             }
         }
         public int CountUnits
@@ -355,6 +379,11 @@ namespace MiniaturArcher
             Activity = defaultActivity;
         }
 
+        public void TurnEnds()
+        {
+            Activity = (int)MathHelper.Clamp(Activity - activityReductionPerTurn, defaultActivity, maxActivity);
+        }
+
         internal void Summon(Unit unit,bool local=false)
         {
             Debug.Assert(CountUnits < 2);
@@ -380,33 +409,69 @@ namespace MiniaturArcher
 
             spriteBatch.Draw(tileBg2, Position * tile.TextureOrigin * 2 + camera, color);
             spriteBatch.Draw(tileBg, Position * tile.TextureOrigin * 2 + camera, Fraction == null ? Color.White : Fraction.Color);
-            spriteBatch.Draw(tile, Position * tile.TextureOrigin * 2 + camera, Fraction == null ? Color.White : Fraction.Color);
+            spriteBatch.Draw(tile, Position * tile.TextureOrigin * 2 + camera, Color.White);
+            //spriteBatch.Draw(tile, Position * tile.TextureOrigin * 2 + camera, Fraction == null ? Color.White : Fraction.Color);
 
-            for (int i = 0; i < 2; i++)
+            if (CountUnits > 0)
             {
-                if (Unit[i] == null) continue;
-                spriteBatch.Draw(Sprite, Position * tile.TextureOrigin * 2 + camera, Color.White);
-                if (i == 0)
-                    spriteBatch.DrawLine(Position * tile.TextureOrigin * 2 + camera + new Vector2(1, 3), (new Vector2(0, 15) * Unit[i].Hitpoints / (float)MiniaturArcher.Unit.MaxHitpoints + Position * tile.TextureOrigin * 2 + camera + new Vector2(2, 4)), Unit[i].Color);
-                else
-                    spriteBatch.DrawLine(Position * tile.TextureOrigin * 2 + camera + new Vector2(3, 1), (new Vector2(15, 0) * Unit[i].Hitpoints / (float)MiniaturArcher.Unit.MaxHitpoints + Position * tile.TextureOrigin * 2 + camera + new Vector2(3, 1)), Unit[i].Color);
-            }
-        }
-        Sprite Sprite
-        {
-            get
-            {
-                switch (Type)
+                if (CountUnits == 2)
                 {
-                    case UnitTypes.WaterAir: return waterair;
-                    case UnitTypes.FireWater: return firewater;
-                    case UnitTypes.FireAir: return fireair;
-                    case UnitTypes.Fire: if (CountUnits == 2) return firefire; return fire;
-                    case UnitTypes.Water: if (CountUnits == 2) return waterwater; return water;
-                    case UnitTypes.Air: if (CountUnits == 2) return airair; return air;
-                    default: throw new NotImplementedException();
+                    var color1 = Color.Lerp(Color,Unit[0].Color,0.2f);
+                    var color2 = Color.Lerp(Color, Unit[1].Color, 0.2f);
+                    var pos1 = Vector2.Zero;
+                    var pos2 = Vector2.Zero;
+
+                    if(Map.Ui.SelectedUnit==Unit[0]||Map.Ui.SelectedUnit==Unit[1])
+                    {
+                        color1 = Unit[0].Color;
+                        color2 = Unit[1].Color;
+                        if (Map.Ui.SelectedUnit == Unit[0])
+                        {
+                            pos1 = new Vector2(0, -4);
+                        }
+                        else
+                        {
+                            pos2 = new Vector2(0, -4);
+                        }
+                    }
+
+                    spriteBatch.Draw(token, pos1 + Position * tile.TextureOrigin * 2 + camera - token.TextureOrigin + tile.TextureOrigin - new Vector2(7, 7), color1);
+                    spriteBatch.Draw(token, pos2 + Position * tile.TextureOrigin * 2 + camera - token.TextureOrigin + tile.TextureOrigin + new Vector2(7, 7), color2);
+
+                    spriteBatch.DrawProgressBar(pos1 + Position * tile.TextureOrigin * 2 + camera - token.TextureOrigin + tile.TextureOrigin + new Vector2(18, -1) - new Vector2(7, 7), 21, (int)(21 * Unit[0].Hitpoints / MiniaturArcher.Unit.MaxHitpoints), 3, Color.DarkGray, Color.Green);
+                    spriteBatch.DrawProgressBar(pos2 + Position * tile.TextureOrigin * 2 + camera - token.TextureOrigin + tile.TextureOrigin + new Vector2(18, -1) + new Vector2(7, 7), 21, (int)(21 * Unit[1].Hitpoints / MiniaturArcher.Unit.MaxHitpoints), 3, Color.DarkGray, Color.Green);
+                }
+                else
+                {
+                    var pos = Vector2.Zero;
+                    if (Map.Ui.SelectedUnit == GetUnitWithMostHitpoints) pos = new Vector2(0, -4);
+
+                    spriteBatch.DrawProgressBar(pos + Position * tile.TextureOrigin * 2 + camera - token.TextureOrigin + tile.TextureOrigin + new Vector2(18, -1), 21, (int)(21 * GetUnitWithMostHitpoints.Hitpoints / MiniaturArcher.Unit.MaxHitpoints), 3, Color.DarkGray, Color.Green);
+                    spriteBatch.Draw(token, pos + Position * tile.TextureOrigin * 2 + camera - token.TextureOrigin + tile.TextureOrigin, Color);
                 }
             }
+
+                //    if (i == 0)
+                //        spriteBatch.DrawLine(Position * tile.TextureOrigin * 2 + camera + new Vector2(2, 3), (new Vector2(0, 15) * Unit[i].Hitpoints / (float)MiniaturArcher.Unit.MaxHitpoints + Position * tile.TextureOrigin * 2 + camera + new Vector2(2, 3)), Unit[i].Color);
+                //    else
+                //        spriteBatch.DrawLine(Position * tile.TextureOrigin * 2 + camera + new Vector2(3, 1), (new Vector2(15, 0) * Unit[i].Hitpoints / (float)MiniaturArcher.Unit.MaxHitpoints + Position * tile.TextureOrigin * 2 + camera + new Vector2(3, 1)), Unit[i].Color);
+                //}
         }
+        //Sprite Sprite
+        //{
+        //    get
+        //    {
+        //        switch (Type)
+        //        {
+        //            case UnitTypes.WaterAir: return waterair;
+        //            case UnitTypes.FireWater: return firewater;
+        //            case UnitTypes.FireAir: return fireair;
+        //            case UnitTypes.Fire: if (CountUnits == 2) return firefire; return fire;
+        //            case UnitTypes.Water: if (CountUnits == 2) return waterwater; return water;
+        //            case UnitTypes.Air: if (CountUnits == 2) return airair; return air;
+        //            default: throw new NotImplementedException();
+        //        }
+        //    }
+        //}
     }
 }
